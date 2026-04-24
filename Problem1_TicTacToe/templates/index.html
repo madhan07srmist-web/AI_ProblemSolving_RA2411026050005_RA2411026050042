@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tic-Tac-Toe AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --bg-1: #f4f7fb;
+            --bg-2: #e7edf5;
+            --card: #ffffff;
+            --text: #132033;
+            --muted: #5d6b7d;
+            --line: #dce4ef;
+            --accent: #1f7aec;
+            --accent-soft: #d9e9ff;
+            --danger: #c93a2f;
+            --success: #1f7a45;
+            --shadow: 0 22px 40px rgba(16, 31, 51, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Manrope", "Segoe UI", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(1200px 700px at 95% -10%, #c5dbff 0%, transparent 45%),
+                radial-gradient(1000px 600px at -10% 115%, #d7f0f2 0%, transparent 45%),
+                linear-gradient(155deg, var(--bg-1), var(--bg-2));
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        .app {
+            width: min(980px, 100%);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+        }
+
+        .left,
+        .right {
+            padding: 28px;
+        }
+
+        .left {
+            border-right: 1px solid var(--line);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(1.5rem, 2vw + 1rem, 2.1rem);
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            margin: 8px 0 22px;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(70px, 110px));
+            gap: 11px;
+            justify-content: start;
+        }
+
+        .cell {
+            height: min(19vw, 102px);
+            max-height: 102px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: #fff;
+            cursor: pointer;
+            font-size: clamp(1.7rem, 3.2vw, 2.6rem);
+            font-weight: 800;
+            color: var(--text);
+            transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+        }
+
+        .cell:hover:enabled {
+            transform: translateY(-1px);
+            border-color: #bdd6fb;
+            box-shadow: 0 10px 22px rgba(30, 66, 109, 0.12);
+        }
+
+        .cell:disabled {
+            cursor: not-allowed;
+            background: #fbfdff;
+        }
+
+        .cell.x {
+            color: #1457ab;
+        }
+
+        .cell.o {
+            color: #9b2d17;
+        }
+
+        .right {
+            display: grid;
+            gap: 18px;
+            align-content: start;
+            background: linear-gradient(180deg, rgba(252, 254, 255, 0.82), rgba(245, 250, 255, 0.85));
+        }
+
+        .panel {
+            border: 1px solid var(--line);
+            background: var(--card);
+            border-radius: 14px;
+            padding: 14px 14px 12px;
+        }
+
+        .panel h2 {
+            margin: 0 0 10px;
+            font-size: 0.92rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+        }
+
+        label {
+            font-size: 0.9rem;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        select,
+        button {
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            font-family: inherit;
+            font-size: 0.96rem;
+        }
+
+        select {
+            padding: 10px 12px;
+            background: #fff;
+            color: var(--text);
+        }
+
+        .restart {
+            margin-top: 8px;
+            border: 0;
+            background: linear-gradient(100deg, var(--accent), #1666c9);
+            color: #fff;
+            padding: 11px 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: filter 120ms ease, transform 120ms ease;
+        }
+
+        .restart:hover {
+            filter: brightness(1.06);
+            transform: translateY(-1px);
+        }
+
+        .status {
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 12px;
+            border-radius: 10px;
+            background: var(--accent-soft);
+            color: #0f4f9c;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+        }
+
+        .status.win {
+            background: #e3f6ea;
+            color: var(--success);
+        }
+
+        .status.loss {
+            background: #fdebe9;
+            color: var(--danger);
+        }
+
+        .stats {
+            display: grid;
+            gap: 8px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            font-size: 0.92rem;
+            padding-bottom: 7px;
+            border-bottom: 1px dashed #dce4ef;
+        }
+
+        .stat-row span:first-child {
+            color: var(--muted);
+        }
+
+        .stat-row span:last-child {
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .footnote {
+            font-size: 0.82rem;
+            color: var(--muted);
+            line-height: 1.45;
+        }
+
+        @media (max-width: 840px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+
+            .left {
+                border-right: 0;
+                border-bottom: 1px solid var(--line);
+            }
+
+            .board {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 460px) {
+            .left,
+            .right {
+                padding: 18px;
+            }
+
+            .board {
+                grid-template-columns: repeat(3, minmax(65px, 1fr));
+            }
+
+            .cell {
+                height: 23vw;
+                max-height: 90px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="app">
+        <section class="left">
+            <h1>Tic-Tac-Toe</h1>
+            <p class="subtitle">You are X. Choose an AI strategy and start the game.</p>
+
+            <div id="board" class="board" aria-label="Tic-Tac-Toe board">
+                <button class="cell" data-index="0" aria-label="Cell 1"></button>
+                <button class="cell" data-index="1" aria-label="Cell 2"></button>
+                <button class="cell" data-index="2" aria-label="Cell 3"></button>
+                <button class="cell" data-index="3" aria-label="Cell 4"></button>
+                <button class="cell" data-index="4" aria-label="Cell 5"></button>
+                <button class="cell" data-index="5" aria-label="Cell 6"></button>
+                <button class="cell" data-index="6" aria-label="Cell 7"></button>
+                <button class="cell" data-index="7" aria-label="Cell 8"></button>
+                <button class="cell" data-index="8" aria-label="Cell 9"></button>
+            </div>
+        </section>
+
+        <aside class="right">
+            <div class="panel">
+                <h2>Game Control</h2>
+                <label for="algorithm">AI Algorithm (pick before first move)</label>
+                <select id="algorithm">
+                    <option value="minimax">Minimax</option>
+                    <option value="alphabeta">Alpha-Beta Pruning</option>
+                </select>
+                <button id="restart" class="restart" type="button">New Game / Restart</button>
+            </div>
+
+            <div class="panel">
+                <h2>Status</h2>
+                <div id="status" class="status">Your turn (X)</div>
+            </div>
+
+            <div class="panel">
+                <h2>Last AI Move Metrics</h2>
+                <div class="stats">
+                    <div class="stat-row"><span>Algorithm Used</span><span id="metric-algo">-</span></div>
+                    <div class="stat-row"><span>Nodes Explored</span><span id="metric-nodes">-</span></div>
+                    <div class="stat-row"><span>Time Taken (ms)</span><span id="metric-time">-</span></div>
+                </div>
+            </div>
+
+            <p class="footnote">The selected algorithm remains locked after your first move. Restart to choose a different one.</p>
+        </aside>
+    </main>
+
+    <script>
+        const boardEl = document.getElementById("board");
+        const cells = Array.from(document.querySelectorAll(".cell"));
+        const statusEl = document.getElementById("status");
+        const algorithmEl = document.getElementById("algorithm");
+        const restartEl = document.getElementById("restart");
+        const metricAlgoEl = document.getElementById("metric-algo");
+        const metricNodesEl = document.getElementById("metric-nodes");
+        const metricTimeEl = document.getElementById("metric-time");
+
+        let board = Array(9).fill("");
+        let gameOver = false;
+        let gameStarted = false;
+        let requestInFlight = false;
+
+        function setStatus(message, outcome) {
+            statusEl.textContent = message;
+            statusEl.classList.remove("win", "loss");
+            if (outcome === "X") {
+                statusEl.classList.add("win");
+            } else if (outcome === "O") {
+                statusEl.classList.add("loss");
+            }
+        }
+
+        function renderBoard() {
+            cells.forEach((cell, idx) => {
+                const value = board[idx];
+                cell.textContent = value;
+                cell.classList.remove("x", "o");
+                if (value === "X") {
+                    cell.classList.add("x");
+                } else if (value === "O") {
+                    cell.classList.add("o");
+                }
+
+                const shouldDisable = gameOver || value !== "" || requestInFlight;
+                cell.disabled = shouldDisable;
+            });
+        }
+
+        function resetMetrics() {
+            metricAlgoEl.textContent = "-";
+            metricNodesEl.textContent = "-";
+            metricTimeEl.textContent = "-";
+        }
+
+        function restartGame() {
+            board = Array(9).fill("");
+            gameOver = false;
+            gameStarted = false;
+            requestInFlight = false;
+            algorithmEl.disabled = false;
+            resetMetrics();
+            setStatus("Your turn (X)", "ongoing");
+            renderBoard();
+        }
+
+        async function submitMove(index) {
+            if (gameOver || requestInFlight) {
+                return;
+            }
+            if (board[index] !== "") {
+                return;
+            }
+
+            requestInFlight = true;
+            if (!gameStarted) {
+                gameStarted = true;
+                algorithmEl.disabled = true;
+            }
+            renderBoard();
+
+            try {
+                const response = await fetch("/move", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        board,
+                        index,
+                        algorithm: algorithmEl.value,
+                    }),
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || "Move failed.");
+                }
+
+                board = data.board;
+                gameOver = Boolean(data.game_over);
+
+                if (data.ai) {
+                    metricAlgoEl.textContent = data.ai.algorithm;
+                    metricNodesEl.textContent = String(data.ai.nodes_explored);
+                    metricTimeEl.textContent = String(data.ai.time_ms);
+                }
+
+                setStatus(data.message, data.status);
+            } catch (error) {
+                setStatus(error.message || "An unexpected error occurred.", "ongoing");
+            } finally {
+                requestInFlight = false;
+                renderBoard();
+            }
+        }
+
+        boardEl.addEventListener("click", (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLButtonElement)) {
+                return;
+            }
+            const index = Number(target.dataset.index);
+            if (Number.isInteger(index)) {
+                submitMove(index);
+            }
+        });
+
+        restartEl.addEventListener("click", restartGame);
+
+        restartGame();
+    </script>
+</body>
+</html>
