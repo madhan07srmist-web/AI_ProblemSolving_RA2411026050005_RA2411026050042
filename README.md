@@ -14,7 +14,7 @@ Alpha-Beta Pruning is used as an optimization to skip branches that cannot impro
 
 ### How to Run
 ```bash
-python tictactoe.py
+python app.py
 ```
 
 ### Sample Output
@@ -43,7 +43,7 @@ At each step, it scores candidate decisions and selects the option with the best
 
 ### How to Run
 ```bash
-python job_scheduler.py
+python app.py
 ```
 
 ### Sample Output
