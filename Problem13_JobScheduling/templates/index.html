@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Job Scheduling Decision System</title>
+    <style>
+        :root {
+            --bg: #f4f6f8;
+            --panel: #ffffff;
+            --panel-muted: #eef2f5;
+            --border: #d5dde5;
+            --text: #1f2a36;
+            --subtext: #5c6b79;
+            --accent: #1f6feb;
+            --accent-strong: #1558ba;
+            --danger: #b42318;
+            --success: #0f766e;
+            --shadow: 0 10px 28px rgba(12, 30, 50, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 10% 10%, #ffffff 0%, #f4f6f8 35%),
+                linear-gradient(145deg, #f2f5f8, #e8edf2);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 28px auto;
+            padding: 0 18px 28px;
+        }
+
+        .header {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 16px;
+        }
+
+        .header h1 {
+            margin: 0 0 6px;
+            font-size: 1.5rem;
+            letter-spacing: 0.2px;
+        }
+
+        .header p {
+            margin: 0;
+            color: var(--subtext);
+            line-height: 1.4;
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 10px;
+            align-items: center;
+            margin-top: 14px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 0.95rem;
+            color: var(--text);
+            background: #fff;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent);
+            outline: 2px solid rgba(31, 111, 235, 0.2);
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.92rem;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-strong);
+        }
+
+        .btn-secondary {
+            background: #cfd8e3;
+            color: #1d2a35;
+        }
+
+        .btn-secondary:hover {
+            background: #becad7;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 16px;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 18px;
+        }
+
+        .panel h2 {
+            margin: 0 0 12px;
+            font-size: 1.05rem;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .metric {
+            background: var(--panel-muted);
+            border: 1px solid #dbe4ec;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .metric .label {
+            font-size: 0.8rem;
+            color: var(--subtext);
+            margin-bottom: 3px;
+        }
+
+        .metric .value {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0 6px;
+        }
+
+        .task-btn {
+            min-width: 62px;
+            border: 1px solid #9eb5cc;
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #133047;
+            cursor: pointer;
+        }
+
+        .task-btn:hover {
+            border-color: var(--accent);
+            background: #eaf2ff;
+        }
+
+        .task-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .round-box {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #dce3eb;
+            border-radius: 8px;
+            background: #fcfdff;
+            color: var(--subtext);
+            line-height: 1.45;
+            min-height: 58px;
+        }
+
+        .log {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #dde4ec;
+            border-radius: 8px;
+            background: #fbfcfe;
+        }
+
+        .log-item {
+            padding: 10px;
+            border-bottom: 1px solid #e7edf3;
+            font-size: 0.92rem;
+            line-height: 1.4;
+        }
+
+        .log-item:last-child {
+            border-bottom: 0;
+        }
+
+        .summary {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #d6e1eb;
+            background: #f2f7fb;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .summary strong {
+            color: #10283d;
+        }
+
+        .outcome-user {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .outcome-ai {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        .outcome-draw {
+            color: #6b7280;
+            font-weight: 700;
+        }
+
+        .error {
+            margin-top: 10px;
+            color: var(--danger);
+            font-size: 0.9rem;
+            min-height: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .control-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <section class="header">
+            <h1>Smart Job Scheduling Decision System</h1>
+            <p>
+                Decision support simulation where a human operator and an AI scheduler
+                claim tasks from a shared workload pool. The scheduler uses Minimax
+                to optimize long-term allocation advantage.
+            </p>
+
+            <div class="control-panel">
+                <input
+                    id="taskInput"
+                    type="text"
+                    placeholder="Enter comma-separated task values, e.g. 3,7,2,9,5"
+                />
+                <button class="btn btn-primary" id="initBtn">Initialize</button>
+                <button class="btn btn-secondary" id="resetBtn">Reset</button>
+            </div>
+            <div class="error" id="errorBox"></div>
+        </section>
+
+        <div class="layout">
+            <section class="panel">
+                <h2>Allocation Board</h2>
+
+                <div class="status-grid">
+                    <div class="metric">
+                        <div class="label">User Total Score</div>
+                        <div class="value" id="userScore">0</div>
+                    </div>
+                    <div class="metric">
+                        <div class="label">AI Scheduler Total Score</div>
+                        <div class="value" id="aiScore">0</div>
+                    </div>
+                    <div class="metric">
+                        <div class="label">Remaining Tasks</div>
+                        <div class="value" id="remainingCount">0</div>
+                    </div>
+                    <div class="metric">
+                        <div class="label">Current Turn</div>
+                        <div class="value" id="currentTurn">User</div>
+                    </div>
+                </div>
+
+                <h2 style="margin-top: 4px;">Available Task Pool</h2>
+                <div class="pool" id="taskPool"></div>
+
+                <div class="round-box" id="roundInfo">
+                    Round updates will appear here after each user selection.
+                </div>
+
+                <div class="summary" id="finalSummary"></div>
+            </section>
+
+            <section class="panel">
+                <h2>Decision Log</h2>
+                <div class="log" id="decisionLog"></div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const taskInput = document.getElementById("taskInput");
+        const initBtn = document.getElementById("initBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const errorBox = document.getElementById("errorBox");
+
+        const taskPool = document.getElementById("taskPool");
+        const decisionLog = document.getElementById("decisionLog");
+        const userScoreEl = document.getElementById("userScore");
+        const aiScoreEl = document.getElementById("aiScore");
+        const remainingCountEl = document.getElementById("remainingCount");
+        const currentTurnEl = document.getElementById("currentTurn");
+        const roundInfoEl = document.getElementById("roundInfo");
+        const finalSummaryEl = document.getElementById("finalSummary");
+
+        let currentState = null;
+
+        function setError(message) {
+            errorBox.textContent = message || "";
+        }
+
+        function parseTaskInput() {
+            const raw = taskInput.value.trim();
+            if (!raw) return null;
+
+            const parts = raw.split(",").map((p) => p.trim()).filter(Boolean);
+            if (!parts.length) {
+                throw new Error("Please provide at least one task value.");
+            }
+
+            const parsed = parts.map((p) => {
+                const v = Number(p);
+                if (!Number.isInteger(v)) {
+                    throw new Error("Task values must be integers.");
+                }
+                return v;
+            });
+
+            return parsed;
+        }
+
+        async function apiRequest(url, method = "GET", body = null) {
+            const options = { method, headers: { "Content-Type": "application/json" } };
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            const response = await fetch(url, options);
+            const data = await response.json();
+
+            if (!response.ok || !data.ok) {
+                throw new Error(data.error || "Request failed");
+            }
+
+            return data.state;
+        }
+
+        function renderState(state) {
+            currentState = state;
+
+            userScoreEl.textContent = String(state.user_score);
+            aiScoreEl.textContent = String(state.ai_score);
+            remainingCountEl.textContent = String(state.remaining_tasks.length);
+            currentTurnEl.textContent = state.completed ? "Completed" : "User";
+
+            taskPool.innerHTML = "";
+            state.remaining_tasks.forEach((taskValue, index) => {
+                const button = document.createElement("button");
+                button.className = "task-btn";
+                button.textContent = String(taskValue);
+                button.disabled = state.completed;
+                button.addEventListener("click", () => handleUserMove(index));
+                taskPool.appendChild(button);
+            });
+
+            renderDecisionLog(state.log);
+            renderRoundInfo(state.log);
+            renderFinalSummary(state);
+        }
+
+        function renderDecisionLog(log) {
+            decisionLog.innerHTML = "";
+
+            if (!log.length) {
+                const empty = document.createElement("div");
+                empty.className = "log-item";
+                empty.textContent = "No selections yet.";
+                decisionLog.appendChild(empty);
+                return;
+            }
+
+            log.forEach((entry) => {
+                const item = document.createElement("div");
+                item.className = "log-item";
+                const aiText = entry.ai_pick === null ? "No AI pick (pool exhausted)" : entry.ai_pick;
+                item.textContent =
+                    `Round ${entry.round}: User selected ${entry.user_pick}, AI selected ${aiText}. ` +
+                    `Remaining pool: [${entry.remaining_after_round.join(", ")}]`;
+                decisionLog.appendChild(item);
+            });
+        }
+
+        function renderRoundInfo(log) {
+            if (!log.length) {
+                roundInfoEl.textContent = "Round updates will appear here after each user selection.";
+                return;
+            }
+
+            const last = log[log.length - 1];
+            const aiText = last.ai_pick === null ? "none" : String(last.ai_pick);
+            roundInfoEl.textContent =
+                `Round ${last.round} result: user selected ${last.user_pick}; ` +
+                `AI scheduler selected ${aiText}; remaining tasks now [${last.remaining_after_round.join(", ")}].`;
+        }
+
+        function renderFinalSummary(state) {
+            if (!state.completed) {
+                finalSummaryEl.style.display = "none";
+                finalSummaryEl.innerHTML = "";
+                return;
+            }
+
+            let outcomeClass = "outcome-draw";
+            if (state.ai_score > state.user_score) outcomeClass = "outcome-ai";
+            if (state.ai_score < state.user_score) outcomeClass = "outcome-user";
+
+            finalSummaryEl.style.display = "block";
+            finalSummaryEl.innerHTML =
+                `<div><strong>Final Summary</strong></div>` +
+                `<div>User selected tasks: [${state.user_tasks.join(", ")}] | Total: ${state.user_score}</div>` +
+                `<div>AI selected tasks: [${state.ai_tasks.join(", ")}] | Total: ${state.ai_score}</div>` +
+                `<div class="${outcomeClass}">Outcome: ${state.outcome}</div>`;
+        }
+
+        async function loadInitialState() {
+            try {
+                setError("");
+                const state = await apiRequest("/api/state");
+                taskInput.value = state.initial_tasks.join(", ");
+                renderState(state);
+            } catch (err) {
+                setError(err.message);
+            }
+        }
+
+        async function initializeFromInput() {
+            try {
+                setError("");
+                const tasks = parseTaskInput();
+                const payload = tasks ? { tasks } : {};
+                const state = await apiRequest("/api/initialize", "POST", payload);
+                taskInput.value = state.initial_tasks.join(", ");
+                renderState(state);
+            } catch (err) {
+                setError(err.message);
+            }
+        }
+
+        async function handleUserMove(index) {
+            if (!currentState || currentState.completed) {
+                return;
+            }
+
+            try {
+                setError("");
+                const state = await apiRequest("/api/user-move", "POST", { index });
+                renderState(state);
+            } catch (err) {
+                setError(err.message);
+            }
+        }
+
+        async function resetBoard() {
+            try {
+                setError("");
+                let tasks = null;
+
+                try {
+                    tasks = parseTaskInput();
+                } catch {
+                    tasks = null;
+                }
+
+                if (!tasks && currentState && currentState.initial_tasks) {
+                    tasks = currentState.initial_tasks;
+                }
+
+                const payload = tasks ? { tasks } : {};
+                const state = await apiRequest("/api/initialize", "POST", payload);
+                taskInput.value = state.initial_tasks.join(", ");
+                renderState(state);
+            } catch (err) {
+                setError(err.message);
+            }
+        }
+
+        initBtn.addEventListener("click", initializeFromInput);
+        resetBtn.addEventListener("click", resetBoard);
+
+        loadInitialState();
+    </script>
+</body>
+</html>
